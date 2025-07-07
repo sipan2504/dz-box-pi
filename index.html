@@ -1,123 +1,130 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>DZ Box Pi</title>
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="https://sdk.minepi.com/pi-sdk-2.0.js"></script>
+    <title>DZ Box Pi Uygulaması</title>
+    <script src="https://sdk.minepi.com/pi-sdk-prod.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
             display: flex;
             flex-direction: column;
-            align-items: center;
             justify-content: center;
+            align-items: center;
             min-height: 100vh;
             margin: 0;
             background-color: #f0f2f5;
             color: #333;
             text-align: center;
         }
-        h1 {
-            color: #5a1e64; /* Pi Network moruna yakın */
-            margin-bottom: 10px;
+        .container {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            max-width: 500px;
+            width: 90%;
         }
-        p {
+        h1 {
+            color: #555;
             margin-bottom: 20px;
-            font-size: 1.1em;
         }
         button {
-            background-color: #5a1e64;
-            color: white;
+            background-color: #f0f0f0;
+            color: #333;
+            border: 1px solid #ccc;
             padding: 12px 25px;
-            border: none;
-            border-radius: 8px;
+            border-radius: 25px;
             font-size: 1.1em;
             cursor: pointer;
             transition: background-color 0.3s ease;
+            margin-top: 20px;
         }
         button:hover {
-            background-color: #7c3a88;
+            background-color: #e0e0e0;
         }
         #welcome-message {
-            margin-top: 30px;
-            font-size: 1.3em;
-            font-weight: bold;
-            color: #28a745; /* Başarılı mesajı için yeşil */
-        }
-        .error-message {
-            color: #dc3545; /* Hata mesajı için kırmızı */
             margin-top: 20px;
+            font-size: 1.2em;
+            color: #28a745;
+        }
+        #error-message {
+            margin-top: 20px;
+            font-size: 1.2em;
+            color: #dc3545;
+        }
+        .pi-button-icon {
+            vertical-align: middle;
+            margin-right: 8px;
+            width: 24px;
+            height: 24px;
         }
     </style>
 </head>
 <body>
-    <h1>DZ Box Pi Uygulamanıza Hoş Geldiniz!</h1>
-    <p>Pi entegrasyonu başarıyla yapılırsa kullanıcı bilgileriniz burada görünecektir.</p>
-
-    <button id="authButton" onclick="authenticatePi()">Pi ile Giriş Yap</button>
-    <p id="welcome-message"></p>
-    <p class="error-message" id="error-message"></p>
+    <div class="container">
+        <h1>DZ Box Pi Uygulamanıza Hoş Geldiniz!</h1>
+        <p>Pi entegrasyonu başarılıysa kullanıcı bilgileriniz burada görünecektir.</p>
+        <button id="authButton">
+            <img src="https://www.svgrepo.com/show/360241/pi-network.svg" alt="Pi Icon" class="pi-button-icon">
+            Pi ile Giriş Yap
+        </button>
+        <div id="welcome-message" style="display: none;"></div>
+        <div id="error-message" style="display: none;"></div>
+    </div>
 
     <script>
-        // BURAYA KENDİ GERÇEK APP ID'NİZİ YAPIŞTIRIN
-        // Örneğin: "app_abcdef1234567890abcdef"
-        const PI_CLIENT_ID = "oqgwgc3iqbud8ydlog658l04c"; // Bu sizin App ID'niz olmalı
-
-        if (typeof Pi !== 'undefined') {
-            Pi.init({
-                clientId: PI_CLIENT_ID,
-                version: '2.0',
-                sandbox: true, // Testnet için bu 'true' olmalı
-                scopes: ['username'] // Kullanıcı adını almak için 'username' kapsamı gerekli
-            });
-       
-            Pi.onReady(() => {
-                console.log("Pi SDK hazır ve bağlı!");
-                document.getElementById('error-message').innerText = ""; // Hata mesajını temizle
-                // SDK hazır olduğunda otomatik olarak giriş yapmaya çalışılabilir veya bir düğmeye bağlanabilir.
-                // Biz burada düğmeye bağladık.
-            });
-       
-            Pi.onNotReady((error) => {
-                console.error("Pi SDK hazır değil:", error);
-                document.getElementById('error-message').innerText = "Pi SDK yüklenemedi veya hazır değil. Lütfen Pi Browser'da olduğunuzdan emin olun ve tekrar deneyin.";
-            });
-
-        } else {
-            console.error("Pi SDK yüklenemedi. Pi Browser'da olduğunuzdan emin olun.");
-            document.getElementById('error-message').innerText = "Pi SDK yüklenemedi. Lütfen Pi Browser'da olduğunuzdan emin olun.";
-        }
-
-        function authenticatePi() {
-            // Pi.isReady() fonksiyon çağrısı düzeltildi
-            if (typeof Pi === 'undefined' || !Pi.isReady()) {
-                document.getElementById('error-message').innerText = "Pi SDK henüz hazır değil. Lütfen birkaç saniye bekleyin ve tekrar deneyin.";
-                return;
+        // Sayfa tamamen yüklendiğinde bu kod çalışacak
+        window.onload = function() {
+            // Pi SDK henüz hazır değilse veya Pi Browser'da değilse bir mesaj göster
+            // Bu kontrol, uygulamanın yalnızca Pi Browser ortamında çalışmasını sağlar.
+            if (typeof Pi === 'undefined' || !Pi.isPiBrowser) {
+                document.getElementById('authButton').disabled = true; // Giriş düğmesini devre dışı bırak
+                document.getElementById('error-message').innerText = "Pi SDK henüz hazır değil veya Pi Browser'da değilsiniz. Lütfen birkaç saniye bekleyin ve tekrar deneyin.";
+                document.getElementById('error-message').style.display = 'block'; // Hata mesajını göster
+                document.getElementById('welcome-message').style.display = 'none'; // Hoş geldiniz mesajını gizle
+                return; // Daha fazla kod çalıştırmayı durdur
             }
 
-            Pi.authenticate(
-                { scopes: ['username'] }, // Sadece kullanıcı adını istedik
-                function(authData) {
-                    console.log("Giriş Başarılı:", authData);
-                    document.getElementById('welcome-message').innerText = "Hoş geldin, " + authData.user.username + "!";
-                    document.getElementById('authButton').style.display = 'none'; // Giriş başarılı olunca butonu gizle
-                    document.getElementById('error-message').innerText = ""; // Hata mesajını temizle
-                    alert("Merhaba " + authData.user.username + "! Giriş başarılı.");
-                },
-                function(error) {
-                    console.error("Pi Kimlik Doğrulama Hatası:", error);
-                    let errorMessage = "Kimlik doğrulama başarısız oldu. Hata: ";
-                    if (error && error.message) {
-                        errorMessage += error.message;
-                    } else if (typeof error === 'string') {
-                        errorMessage += error;
-                    } else {
-                        errorMessage += "Bilinmeyen hata.";
-                    }
-                    document.getElementById('error-message').innerText = errorMessage;
-                }
-            );
-        }
+            // Pi SDK'yı başlat
+            // YOUR_APP_ID_HERE kısmı, sağladığınız API anahtarıyla güncellenmiştir.
+            Pi.init({ version: "2.0", app: "zfojhg8yr1wttle2jnmpjfcnvgc1xn7hclnwab3vierqmqi0xmgk0tedw94mh5l5" });
+
+            document.getElementById('authButton').onclick = function() {
+                // Kullanıcı kimlik doğrulaması ve ödeme izinleri iste
+                Pi.authenticate(['username', 'payments'], onIncompletePaymentFound)
+                    .then(function(authData) {
+                        // Kimlik doğrulama başarılı olursa hoş geldiniz mesajını göster
+                        document.getElementById('welcome-message').innerText = `Merhaba, ${authData.user.username}! Pi Entegrasyonu Başarılı!`;
+                        document.getElementById('welcome-message').style.display = 'block';
+                        document.getElementById('authButton').style.display = 'none'; // Giriş düğmesini gizle
+                        document.getElementById('error-message').style.display = 'none'; // Hata mesajını gizle
+                    })
+                    .catch(function(error) {
+                        // Kimlik doğrulama sırasında bir hata oluşursa hata mesajını göster
+                        let errorMessage = "Bir hata oluştu: ";
+                        if (error.error) {
+                            errorMessage += `Kod: ${error.error.code}, Mesaj: ${error.error.message}`;
+                        } else if (error.message) {
+                            errorMessage += error.message;
+                        } else {
+                            errorMessage += "Bilinmeyen bir hata.";
+                        }
+                        document.getElementById('error-message').innerText = errorMessage;
+                        document.getElementById('error-message').style.display = 'block';
+                        document.getElementById('welcome-message').style.display = 'none'; // Hoş geldiniz mesajını gizle
+                    });
+            }
+
+            // Eksik ödemeler bulunduğunda çağrılacak fonksiyon
+            function onIncompletePaymentFound(payment) {
+                // Eksik ödemeleri burada ele alma mantığınızı uygulayın.
+                // Örneğin, kullanıcıya bir mesaj gösterebilir veya ödemeyi yeniden deneyebilirsiniz.
+                console.log("Eksik ödeme bulundu:", payment);
+            }
+        };
     </script>
 </body>
 </html>
+
