@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DZ Box Pi Uygulaması</title>
-    <script src="https://sdk.minepi.com/pi-sdk-prod.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -14,117 +13,164 @@
             align-items: center;
             min-height: 100vh;
             margin: 0;
-            background-color: #f0f2f5;
-            color: #333;
+            background-color: #f0f2f5; /* Açık gri arka plan */
             text-align: center;
         }
         .container {
+            padding: 20px;
             background-color: #fff;
-            padding: 30px;
             border-radius: 10px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-            max-width: 500px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
             width: 90%;
         }
-        h1 {
-            color: #555;
-            margin-bottom: 20px;
-        }
         button {
-            background-color: #f0f0f0;
-            color: #333;
-            border: 1px solid #ccc;
-            padding: 12px 25px;
-            border-radius: 25px;
-            font-size: 1.1em;
+            padding: 10px 20px;
+            margin: 10px 0;
+            font-size: 16px;
             cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            color: white;
+            background-color: #6a1b9a; /* Mor Pi rengi */
             transition: background-color 0.3s ease;
-            margin-top: 20px;
         }
         button:hover {
-            background-color: #e0e0e0;
+            background-color: #4a0072;
         }
-        #welcome-message {
+        #userInfo {
             margin-top: 20px;
-            font-size: 1.2em;
-            color: #28a745;
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
         }
-        #error-message {
-            margin-top: 20px;
-            font-size: 1.2em;
-            color: #dc3545;
+        .message {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 5px;
+            font-weight: bold;
         }
-        .pi-button-icon {
-            vertical-align: middle;
-            margin-right: 8px;
-            width: 24px;
-            height: 24px;
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        #gameSection {
+            display: none; /* Başlangıçta gizli, giriş sonrası gösterilecek */
         }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>DZ Box Pi Uygulamanıza Hoş Geldiniz!</h1>
-        <p>Pi entegrasyonu başarılıysa kullanıcı bilgileriniz burada görünecektir.</p>
-        <button id="authButton">
-            <img src="https://www.svgrepo.com/show/360241/pi-network.svg" alt="Pi Icon" class="pi-button-icon">
-            Pi ile Giriş Yap
-        </button>
-        <div id="welcome-message" style="display: none;"></div>
-        <div id="error-message" style="display: none;"></div>
+
+        <div id="loginSection">
+            <p>Pi entegrasyonu başarılıysa kullanıcı bilgileriniz burada görünecektir.</p>
+            <button id="loginButton">
+                <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNiIgaGVpZ2h0PSIxNiIgZmlsbD0iY3VycmVudENvbG9yIiBjbGFzcz0iaS1waSIgdmlld0JveD0iMCAwIDE2IDE2Ij4NCiAgPHBhdGggZD0iTTggMEExLjk5IDEuOTkgMCAwIDAgNiAyLjk5bC4wMyAxLjY1YTIgMiAwIDAgMS0uMzUuNzUgNiA2IDAgMCAwLTEuNzQuMjkgMSAxIDAgMCAwLS45NS42OCAxIDEgMCAwIDAtLjEuNzZhMiAyIDAgMCAwLS41OSAxLjkydjEuOTlhMiAyIDAgMCAwLjU5IDEuOTIgMSAxIDAgMCAwLjEzLjc1IDEgMSAwIDAgMC45NC42OCAzIDMgMCAwIDAgMy4zLjM5Ljk4Ljk4IDAgMCAwLS4wNS0uMzhsLS40LS4yYTggOCAwIDAgMS0uNS0uNWMuMDMtLjIuMi0uNDEuMzItLjU1LjA5LS4xNC4xMy0uMjUuMi0uNDMuMDUtLjEzLjA4LS4yNy4xLS40LS4xNS0uMTItLjI4LS4yNy0uNDEtLjQyLS4xNC0uMTYtLjI3LS4zNC0uNC0uNTVhMiAyIDAgMCAwLS41Mi0uNzYuNjcuNjcgMCAwIDAtLjUtLjEzIDEgMSAwIDAgMS0uMTYuMTFjLS4zNS4zMS0uNjYuNjQtLjc5IDEuMDEtLjEuMzQtLjIuNzMtLjIuOTdBLjk5Ljk5IDAgMCAwIDYgOS4zdi0uMjZhMyAzIDAgMCAxLS42OC0uOTUgNiA2IDAgMCAxLS40Ny0yLjE4IDIgMiAwIDAgMSAxLjgyLTIuNjkgMSAxIDAgMCAxLjA2LS43IDYgNiAwIDAgMC0uMjgtMi4wMyAyIDIgMCAwIDEgMi4wNi0yLjUyQTggOCAwIDAgMCA4IDBhMS45OSAxLjk5IDAgMCAwIDAgMFpNOCAxMy4wN2E1LjA2IDUuMDYgMCAwIDEgLjQ0LS4zNS42NS42NSAwIDAgMC0uMjgtLjk1IDIgMiAwIDAgMS0uMDctLjk5IDMuNDMgMy40MyAwIDAgMS0uNTMtMi4wMSAyIDIgMCAwIDEtLjM5Ljg3YTMgMyAwIDAgMSAxLjUyLjQ1IDMuOTggMy45OCAwIDAgMCAyLjA3LS4xIDIgMiAwIDAgMS0uMTUtLjUgMy40MyAzLjQzIDAgMCAxLS44Mi0uODggMyAzIDAgMCAwLS43LS45MiAyIDIgMCAwIDEtMS41Ny0uOTggMyAzIDAgMCAwLS44Ni0uMjMgMiAyIDAgMCAxLTEuMTUuNTggMiAyIDAgMCAxLS4zNSAxLjIyIDMgMyAwIDAgMC0uNzQuNjggMiAyIDAgMCAxLTEuNjcgMS4xOSA0IDQgMCAwIDAgLS44MS0uNTMgMiAyIDAgMCAxLS44NS0uNjYgMSAxIDAgMCAxLS4yNy0uMzkgMiAyIDAgMCAxLS4wNi0uMyAxIDEgMCAwIDAtLjI4LS44MyAyIDIgMCAwIDEtLjAyLTEuMSAxIDEgMCAwIDAtLjU3LS45NyAxIDEgMCAwIDAtLjMtLjA3IDMgMyAwIDAgMCAxLjM3LS42OCAyIDIgMCAwIDEtLjQ4LTEuMyA1IDUgMCAwIDAtLjktMS44OCAyIDIgMCAwIDEtLjEtLjY0YTEgMSAwIDAgMC0uMi0uNTQgMiAyIDAgMCAxLS40OC0uNDMgMiAyIDAgMCAxLS4wNC0uMDcgMSAxIDAgMCAwLS41Mi0uODkgMiAyIDAgMCAxLS4wOC0uNzUgMiAyIDAgMCAxLTEuMDktLjc1IDIgMiAwIDAgMC0uMTQtLjA5IDEgMSAwIDAgMC0uOTMtLjUzQTMgMyAwIDAgMCA2LjY0IDJhMS45OSAxLjk5IDAgMCAwLS4wMS0uMjdBMiAyIDAgMCAxIDggLjAxYTEuOTkgMS45OSAwIDAgMS0uMDQuMDJBOCA4IDAgMCAxIDggMTMuMDdaIi8+DQo8L3N2Zz4=" alt="Pi Icon" style="width: 20px; height: 20px; vertical-align: middle; margin-right: 5px;">
+                Pi ile Giriş Yap
+            </button>
+            <p id="sdkStatus" class="error">Pi SDK henüz hazır değil veya Pi Tarayıcı'da değilsiniz. Lütfen birkaç dakika bekleyin ve tekrar deneyin.</p>
+        </div>
+
+        <div id="gameSection" style="display: none;">
+            <p id="userInfo"></p>
+            <h2>Pi Alan Kapmaca Oyunu</h2>
+            <p>Burada oyun alanınız ve ödeme seçenekleriniz olacak.</p>
+            <button id="testPaymentButton">1 Pi Test Ödemesi Yap</button>
+            <button id="premiumArenaButton">5 Pi ile Premium Arena Aç</button>
+            <button id="vipFeaturesButton">10 Pi ile VIP Özellikleri Al</button>
+            <div id="paymentMessage" class="message"></div>
+        </div>
     </div>
 
+    <script src="https://sdk.mine.pi/pi-sdk-prod.js"></script>
+
     <script>
-        // Sayfa tamamen yüklendiğinde bu kod çalışacak
+        // DOM içeriği yüklendiğinde veya sayfa yüklendiğinde çalışmasını sağlayalım
         window.onload = function() {
-            // Pi SDK henüz hazır değilse veya Pi Browser'da değilse bir mesaj göster
-            // Bu kontrol, uygulamanın yalnızca Pi Browser ortamında çalışmasını sağlar.
-            if (typeof Pi === 'undefined' || !Pi.isPiBrowser) {
-                document.getElementById('authButton').disabled = true; // Giriş düğmesini devre dışı bırak
-                document.getElementById('error-message').innerText = "Pi SDK henüz hazır değil veya Pi Browser'da değilsiniz. Lütfen birkaç saniye bekleyin ve tekrar deneyin.";
-                document.getElementById('error-message').style.display = 'block'; // Hata mesajını göster
-                document.getElementById('welcome-message').style.display = 'none'; // Hoş geldiniz mesajını gizle
-                return; // Daha fazla kod çalıştırmayı durdur
-            }
+            // Pi SDK'yı başlatın
+            Pi.init({
+                version: "2.0",
+                appName: "dzboxpi2923", // BURAYI KENDİ UYGULAMA ADINIZLA (APP ID) DEĞİŞTİRİN
+                scopes: ['username', 'payments'], // Kullanıcı adı ve ödeme izinlerini iste
+                is and payment permissions),
+                isTestnet: true, // Testnet'te çalıştığınız için True olarak bırakın
+                onReady: function() {
+                    console.log("Pi SDK başarıyla başlatıldı ve hazır!");
+                    document.getElementById("sdkStatus").innerText = "Pi SDK hazır! Giriş yapabilirsiniz.";
+                    document.getElementById("sdkStatus").classList.remove("error");
+                    document.getElementById("sdkStatus").classList.add("success");
 
-            // Pi SDK'yı başlat
-            // YOUR_APP_ID_HERE kısmı, sağladığınız API anahtarıyla güncellenmiştir.
-            Pi.init({ version: "2.0", app: "zfojhg8yr1wttle2jnmpjfcnvgc1xn7hclnwab3vierqmqi0xmgk0tedw94mh5l5" });
+                    // Giriş Butonu işlevi
+                    document.getElementById("loginButton").onclick = function() {
+                        Pi.authenticate({ scopes: ['username'] }).then(auth => {
+                            console.log("Kullanıcı kimlik doğrulandı:", auth);
+                            document.getElementById("userInfo").innerText = `Hoş Geldiniz, ${auth.user.username}!`;
+                            document.getElementById("loginSection").style.display = 'none';
+                            document.getElementById("gameSection").style.display = 'block'; // Oyun alanını göster
+                        }).catch(error => {
+                            console.error("Kimlik doğrulama hatası:", error);
+                            alert("Giriş yapılırken bir hata oluştu: " + error.message);
+                        });
+                    };
 
-            document.getElementById('authButton').onclick = function() {
-                // Kullanıcı kimlik doğrulaması ve ödeme izinleri iste
-                Pi.authenticate(['username', 'payments'], onIncompletePaymentFound)
-                    .then(function(authData) {
-                        // Kimlik doğrulama başarılı olursa hoş geldiniz mesajını göster
-                        document.getElementById('welcome-message').innerText = `Merhaba, ${authData.user.username}! Pi Entegrasyonu Başarılı!`;
-                        document.getElementById('welcome-message').style.display = 'block';
-                        document.getElementById('authButton').style.display = 'none'; // Giriş düğmesini gizle
-                        document.getElementById('error-message').style.display = 'none'; // Hata mesajını gizle
-                    })
-                    .catch(function(error) {
-                        // Kimlik doğrulama sırasında bir hata oluşursa hata mesajını göster
-                        let errorMessage = "Bir hata oluştu: ";
-                        if (error.error) {
-                            errorMessage += `Kod: ${error.error.code}, Mesaj: ${error.error.message}`;
-                        } else if (error.message) {
-                            errorMessage += error.message;
-                        } else {
-                            errorMessage += "Bilinmeyen bir hata.";
-                        }
-                        document.getElementById('error-message').innerText = errorMessage;
-                        document.getElementById('error-message').style.display = 'block';
-                        document.getElementById('welcome-message').style.display = 'none'; // Hoş geldiniz mesajını gizle
-                    });
-            }
+                    // Ödeme Butonları işlevleri
+                    document.getElementById("testPaymentButton").onclick = function() {
+                        makePayment(1, "Test Ödemesi");
+                    };
+                    document.getElementById("premiumArenaButton").onclick = function() {
+                        makePayment(5, "Premium Arena Kilidi");
+                    };
+                    document.getElementById("vipFeaturesButton").onclick = function() {
+                        makePayment(10, "VIP Özellikler");
+                    };
 
-            // Eksik ödemeler bulunduğunda çağrılacak fonksiyon
-            function onIncompletePaymentFound(payment) {
-                // Eksik ödemeleri burada ele alma mantığınızı uygulayın.
-                // Örneğin, kullanıcıya bir mesaj gösterebilir veya ödemeyi yeniden deneyebilirsiniz.
-                console.log("Eksik ödeme bulundu:", payment);
-            }
+                    function makePayment(amount, memo) {
+                        Pi.payments.createPayment({
+                            amount: amount,
+                            memo: memo,
+                            metadata: {
+                                itemId: memo.replace(/ /g, "_").toLowerCase() // Ürün ID'si
+                            }
+                        }).then(payment => {
+                            console.log("Ödeme isteği oluşturuldu:", payment);
+                            // Burada arka uç sunucunuza ödeme ID'sini göndermeli ve doğrulamalısınız.
+                            // Bu örnekte basitleştirilmiş bir ön uç doğrulaması var.
+                            document.getElementById("paymentMessage").classList.remove("error");
+                            document.getElementById("paymentMessage").classList.add("success");
+                            document.getElementById("paymentMessage").innerText = `Ödeme isteği gönderildi. Onay bekleniyor...`;
+                        }).catch(error => {
+                            console.error("Ödeme oluşturma hatası:", error);
+                            document.getElementById("paymentMessage").classList.remove("success");
+                            document.getElementById("paymentMessage").classList.add("error");
+                            document.getElementById("paymentMessage").innerText = `Ödeme oluşturulurken hata: ${error.message}`;
+                        });
+                    }
+                },
+                onPaymentUpdate: function(payment) {
+                    console.log("Ödeme durumu güncellendi:", payment);
+                    let messageDiv = document.getElementById("paymentMessage");
+                    if (payment.status === "succeeded") {
+                        messageDiv.classList.remove("error");
+                        messageDiv.classList.add("success");
+                        messageDiv.innerText = `Ödeme başarılı! ${payment.amount} Pi için ${payment.memo} alındı.`;
+                        // BURADA KULLANICIYA SATIN ALDIĞI ÖZELLİĞİ AKTİF EDİN
+                    } else if (payment.status === "failed") {
+                        messageDiv.classList.remove("success");
+                        messageDiv.classList.add("error");
+                        messageDiv.innerText = `Ödeme başarısız oldu: ${payment.error}`;
+                    } else if (payment.status === "cancelled") {
+                        messageDiv.classList.remove("success");
+                        messageDiv.classList.add("error");
+                        messageDiv.innerText = `Ödeme iptal edildi.`;
+                    }
+                }
+            });
         };
     </script>
 </body>
 </html>
-<!--Valiidation:[eb7aea70baeb01bd153ca05f1bb91ee851dea5a04b02e524b7f5d53efe1ee9f7855987ade2f3d86b4d74b74c20987e28c3363749d4947f514e925841ba3c3609] -->
